@@ -3,16 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Асмик Мкртчян — парикмахер</title>
+<title>Асмик Мкртчян — премиум запись</title>
 <link rel="stylesheet" href="style.css">
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAE-HYycSMyRf5kK7u-J_GXy0Xy6x9yCO4",
@@ -26,7 +22,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Отправка заявки
 window.sendBooking = async () => {
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
@@ -34,50 +29,57 @@ window.sendBooking = async () => {
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
 
-  if (!name || !phone || !date || !time) {
-    showPopup("Заполните все поля");
-    return;
-  }
+  if (!name || !phone || !date || !time) return showPopup("Заполните все поля");
 
-  await addDoc(collection(db, "bookings"), {
-    name, phone, service, date, time, created: new Date()
-  });
+  await addDoc(collection(db, "bookings"), { name, phone, service, date, time, created: new Date() });
 
-  // Telegram уведомление
   const TOKEN = "8016365510:AAGsZurqFlwTyeVLEdq8-UDc63zioBF5TRo";
   const CHAT_ID = "568048753";
   const text = `🔔 Новая запись!\n👤 ${name}\n📞 ${phone}\n💇 ${service}\n📅 ${date} ${time}`;
 
   fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ chat_id: CHAT_ID, text })
+    method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({chat_id: CHAT_ID, text})
   });
 
   showPopup("Вы успешно записались ❤️");
 };
 
-// Показ popup
 window.showPopup = (text) => {
   const popup = document.getElementById("popup");
   popup.innerText = text;
   popup.classList.add("show");
   setTimeout(() => popup.classList.remove("show"), 3000);
 };
+
+window.scrollToSection = (id) => {
+  document.getElementById(id).scrollIntoView({behavior:"smooth"});
+};
 </script>
 </head>
 
 <body>
 
-<!-- HERO -->
-<section class="hero">
-  <h1>Мкртчян Асмик — парикмахер<br>в Славянске-на-Кубани</h1>
-  <p>Красивые и ухоженные волосы без переплаты и стресса</p>
-  <a href="#booking" class="btn">Записаться</a>
-</section>
+<!-- HEADER HERO -->
+<header class="hero">
+  <div class="hero-content">
+    <h1>Мкртчян Асмик — парикмахер</h1>
+    <p>Красивые и ухоженные волосы без переплаты и стресса</p>
+    <button class="btn" onclick="scrollToSection('booking')">Записаться</button>
+  </div>
+</header>
+
+<!-- НАВИГАЦИЯ -->
+<nav class="nav">
+  <ul>
+    <li><a href="#about">Обо мне</a></li>
+    <li><a href="#services">Услуги</a></li>
+    <li><a href="#works">Мои работы</a></li>
+    <li><a href="#booking">Запись</a></li>
+  </ul>
+</nav>
 
 <!-- ОБО МНЕ -->
-<section id="about" class="section">
+<section id="about" class="section fade-in">
   <h2>Обо мне</h2>
   <div class="about">
     <img src="mom.jpg" alt="Асмик">
@@ -90,7 +92,7 @@ window.showPopup = (text) => {
 </section>
 
 <!-- УСЛУГИ -->
-<section id="services" class="section">
+<section id="services" class="section fade-in">
   <h2>Услуги</h2>
   <div class="services">
     <div class="card">
@@ -113,7 +115,7 @@ window.showPopup = (text) => {
 </section>
 
 <!-- МОИ РАБОТЫ -->
-<section id="works" class="section">
+<section id="works" class="section fade-in">
   <h2>Мои работы</h2>
   <div class="gallery">
     <img src="work1.jpg" alt="Работа 1">
@@ -122,8 +124,8 @@ window.showPopup = (text) => {
   </div>
 </section>
 
-<!-- ОНЛАЙН-ЗАПИСЬ -->
-<section id="booking" class="section">
+<!-- ЗАПИСЬ -->
+<section id="booking" class="section fade-in">
   <h2>Запись онлайн</h2>
   <div class="form-box">
     <input id="name" placeholder="Ваше имя">
@@ -141,6 +143,20 @@ window.showPopup = (text) => {
 </section>
 
 <div id="popup" class="popup"></div>
+
+<script>
+// Анимация появления при скролле
+const faders = document.querySelectorAll('.fade-in');
+const appearOptions = {threshold: 0.2, rootMargin: "0px 0px -50px 0px"};
+const appearOnScroll = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if(!entry.isIntersecting) return;
+    entry.target.classList.add('appear');
+    observer.unobserve(entry.target);
+  });
+}, appearOptions);
+faders.forEach(fader => appearOnScroll.observe(fader));
+</script>
 
 </body>
 </html>
