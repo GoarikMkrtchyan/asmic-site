@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админка — Асмик Мкртчян</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAE-HYycSMyRf5kK7u-J_GXy0Xy6x9yCO4",
+  authDomain: "asmik-hair.firebaseapp.com",
+  projectId: "asmik-hair",
+  storageBucket: "asmik-hair.firebasestorage.app",
+  messagingSenderId: "33721588244",
+  appId: "1:33721588244:web:085a0879231c56c4d8a501"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ⚡ Админ логин (только ты)
+const ADMIN_PASS = "supersecret123";
+
+window.loginAdmin = () => {
+  const pass = document.getElementById("admin-pass").value;
+  if(pass === ADMIN_PASS){
+    document.getElementById("login-box").style.display = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    loadBookings();
+    loadSlots();
+  } else {
+    alert("Неверный пароль!");
+  }
+};
+
+// 📅 Добавление слота
+window.addSlot = async () => {
+  const date = document.getElementById("slot-date").value;
+  const time = document.getElementById("slot-time").value;
+  const duration = parseInt(document.getElementById("slot-duration").value || 60);
+
+  if(!date || !time){
+    alert("Выберите дату и время слота");
+    return;
+  }
+
+  await addDoc(collection(db, "slots"), { date, time, duration, created: new Date() });
+  loadSlots();
+};
+
+// 🗑 Удаление слота
+window.deleteSlot = async (id) => {
+  if(confirm("Удалить этот слот?")){
+    await deleteDoc(doc(db, "slots", id));
+    loadSlots();
+  }
+};
+
+// 📄 Загрузка слотов
+async function loadSlots(){
+  const slotsBox = document.getElementById("slots-list");
+  slotsBox.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "slots"));
+  querySnapshot.forEach(docSnap => {
+    const slot = docSnap.data();
+    slotsBox.innerHTML += `<li>${slot.date} ${slot.time} (${slot.duration} мин) 
+      <button onclick="deleteSlot('${docSnap.id}')">Удалить</button></li>`;
+  });
+}
+
+// 📄 Загрузка бронирований
+async function loadBookings(){
+  const bookingsBox = document.getElementById("bookings-list");
+  bookingsBox.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "bookings"));
+  querySnapshot.forEach(docSnap => {
+    const b = docSnap.data();
+    bookingsBox.innerHTML += `<li>${b.name} — ${b.phone} — ${b.service} — ${b.date} ${b.time}</li>`;
+  });
+}
+</script>
+</head>
+
+<body>
+<h1 class="title">Админка — Асмик Мкртчян</h1>
+
+<!-- Логин -->
+<div id="login-box" class="form-box">
+  <input type="password" id="admin-pass" placeholder="Пароль администратора">
+  <button onclick="loginAdmin()">Войти</button>
+</div>
+
+<!-- Панель администратора -->
+<div id="admin-panel" style="display:none">
+  <section class="section">
+    <h2>Добавить слот</h2>
+    <input type="date" id="slot-date">
+    <input type="time" id="slot-time">
+    <input type="number" id="slot-duration" placeholder="Длительность (мин)">
+    <button onclick="addSlot()">Добавить</button>
+    <ul id="slots-list"></ul>
+  </section>
+
+  <section class="section">
+    <h2>Записи</h2>
+    <ul id="bookings-list"></ul>
+  </section>
+</div>
+</body>
+</html>

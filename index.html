@@ -4,323 +4,143 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Асмик Мкртчян — парикмахер</title>
+<link rel="stylesheet" href="style.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyAE-HYycSMyRf5kK7u-J_GXy0Xy6x9yCO4",
+  authDomain: "asmik-hair.firebaseapp.com",
+  projectId: "asmik-hair",
+  storageBucket: "asmik-hair.firebasestorage.app",
+  messagingSenderId: "33721588244",
+  appId: "1:33721588244:web:085a0879231c56c4d8a501"
+};
 
-body {
-    font-family: 'Montserrat', sans-serif;
-    background: #fafafa;
-    color: #222;
-    line-height: 1.6;
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-/* ===== HEADER ===== */
+// Отправка заявки
+window.sendBooking = async () => {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const service = document.getElementById("service").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
 
-header {
-    position: fixed;
-    width: 100%;
-    top: 0;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    padding: 15px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1000;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-}
+  if (!name || !phone || !date || !time) {
+    showPopup("Заполните все поля");
+    return;
+  }
 
-.logo {
-    font-weight: 700;
-    font-size: 20px;
-}
+  await addDoc(collection(db, "bookings"), {
+    name, phone, service, date, time, created: new Date()
+  });
 
-nav a {
-    margin-left: 25px;
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
-    transition: .3s;
-}
+  // Telegram уведомление
+  const TOKEN = "8016365510:AAGsZurqFlwTyeVLEdq8-UDc63zioBF5TRo";
+  const CHAT_ID = "568048753";
+  const text = `🔔 Новая запись!\n👤 ${name}\n📞 ${phone}\n💇 ${service}\n📅 ${date} ${time}`;
 
-nav a:hover {
-    color: #e91e63;
-}
+  fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ chat_id: CHAT_ID, text })
+  });
 
-/* ===== HERO ===== */
+  showPopup("Вы успешно записались ❤️");
+};
 
-.hero {
-    padding: 140px 20px 80px;
-    text-align: center;
-    background: linear-gradient(135deg,#fff,#ffeef5);
-}
-
-.hero h1 {
-    font-size: 42px;
-    margin-bottom: 15px;
-}
-
-.hero p {
-    font-size: 18px;
-    color: #555;
-    margin-bottom: 30px;
-}
-
-.btn {
-    display: inline-block;
-    padding: 14px 28px;
-    background: #e91e63;
-    color: white;
-    text-decoration: none;
-    border-radius: 30px;
-    font-weight: 600;
-    transition: .3s;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(233,30,99,0.3);
-}
-
-/* ===== SECTION ===== */
-
-.section {
-    padding: 80px 20px;
-    max-width: 1100px;
-    margin: auto;
-}
-
-.section h2 {
-    text-align: center;
-    font-size: 32px;
-    margin-bottom: 40px;
-}
-
-/* ===== ABOUT ===== */
-
-.about {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: center;
-}
-
-.about img {
-    width: 100%;
-    border-radius: 20px;
-}
-
-/* ===== SERVICES ===== */
-
-.services {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
-    gap: 25px;
-}
-
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    transition: .3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-/* ===== GALLERY ===== */
-
-.gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-    gap: 20px;
-}
-
-.gallery img {
-    width: 100%;
-    border-radius: 18px;
-    transition: .3s;
-}
-
-.gallery img:hover {
-    transform: scale(1.04);
-}
-
-/* ===== FORM ===== */
-
-.form-box {
-    max-width: 500px;
-    margin: auto;
-    background: white;
-    padding: 35px;
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-}
-
-input {
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    font-size: 16px;
-}
-
-button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    background: #e91e63;
-    color: white;
-    font-size: 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-/* ===== SOCIALS ===== */
-
-.socials {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.socials a {
-    display: inline-block;
-    margin: 8px;
-    padding: 12px 20px;
-    border-radius: 25px;
-    background: #222;
-    color: white;
-    text-decoration: none;
-    transition: .3s;
-}
-
-.socials a:hover {
-    background: #e91e63;
-}
-
-/* ===== FOOTER ===== */
-
-footer {
-    text-align: center;
-    padding: 40px 20px;
-    background: #111;
-    color: white;
-    margin-top: 60px;
-}
-
-/* ===== MOBILE ===== */
-
-@media (max-width: 768px) {
-    .about {
-        grid-template-columns: 1fr;
-    }
-
-    .hero h1 {
-        font-size: 30px;
-    }
-
-    nav {
-        display: none;
-    }
-}
-</style>
+// Показ popup
+window.showPopup = (text) => {
+  const popup = document.getElementById("popup");
+  popup.innerText = text;
+  popup.classList.add("show");
+  setTimeout(() => popup.classList.remove("show"), 3000);
+};
+</script>
 </head>
 
 <body>
 
-<header>
-    <div class="logo">Асмик Мкртчян</div>
-    <nav>
-        <a href="#about">Обо мне</a>
-        <a href="#services">Услуги</a>
-        <a href="#works">Работы</a>
-        <a href="#booking">Запись</a>
-    </nav>
-</header>
-
+<!-- HERO -->
 <section class="hero">
-    <h1>Мкртчян Асмик — парикмахер<br>в Славянске-на-Кубани</h1>
-    <p>Красивые и ухоженные волосы без переплаты и стресса</p>
-    <a href="#booking" class="btn">Записаться</a>
+  <h1>Мкртчян Асмик — парикмахер<br>в Славянске-на-Кубани</h1>
+  <p>Красивые и ухоженные волосы без переплаты и стресса</p>
+  <a href="#booking" class="btn">Записаться</a>
 </section>
 
+<!-- ОБО МНЕ -->
 <section id="about" class="section">
-    <h2>Обо мне</h2>
-    <div class="about">
-        <img src="mom.jpg" alt="Асмик">
-        <div>
-            <p><b>Меня зовут Асмик Мкртчян</b>, я парикмахер с любовью к своей работе ❤️</p>
-            <br>
-            <p>Более 10 лет в профессии. Работаю аккуратно, внимательно слушаю клиента и делаю так, чтобы результат радовал каждый день.</p>
-            <br>
-            <p>Я знаю, как подобрать стрижку и цвет под форму лица и тип волос. Вы уйдёте с красивыми волосами и хорошим настроением.</p>
-        </div>
+  <h2>Обо мне</h2>
+  <div class="about">
+    <img src="mom.jpg" alt="Асмик">
+    <div>
+      <p><b>Меня зовут Асмик Мкртчян</b>, я парикмахер с любовью к своей работе ❤️</p>
+      <p>Более 10 лет в профессии. Работаю аккуратно, внимательно слушаю клиента и делаю так, чтобы результат радовал каждый день.</p>
+      <p>Я знаю, как подобрать стрижку и цвет под форму лица и тип волос. Вы уйдёте с красивыми волосами и хорошим настроением.</p>
     </div>
+  </div>
 </section>
 
+<!-- УСЛУГИ -->
 <section id="services" class="section">
-    <h2>Услуги</h2>
-    <div class="services">
-        <div class="card">
-            <h3>✂️ Женская стрижка</h3>
-            <p>Подберу форму, которая подчеркнёт вашу красоту и легко укладывается дома.</p>
-        </div>
-        <div class="card">
-            <h3>🎨 Окрашивание</h3>
-            <p>Однотонное и сложное окрашивание. Безопасные материалы и аккуратная работа.</p>
-        </div>
-        <div class="card">
-            <h3>💁‍♀️ Укладка</h3>
-            <p>На праздник, свидание или фотосессию. Локоны, объём, гладкие волосы.</p>
-        </div>
-        <div class="card">
-            <h3>🌿 Ботокс для волос</h3>
-            <p>Восстановление, блеск и мягкость для сухих и повреждённых волос.</p>
-        </div>
+  <h2>Услуги</h2>
+  <div class="services">
+    <div class="card">
+      <h3>✂️ Женская стрижка</h3>
+      <p>Подберу форму, которая подчеркнёт вашу красоту и легко укладывается дома.</p>
     </div>
+    <div class="card">
+      <h3>🎨 Окрашивание</h3>
+      <p>Однотонное и сложное окрашивание. Безопасные материалы и аккуратная работа.</p>
+    </div>
+    <div class="card">
+      <h3>💁‍♀️ Укладка</h3>
+      <p>На праздник, свидание или фотосессию. Локоны, объём, гладкие волосы.</p>
+    </div>
+    <div class="card">
+      <h3>🌿 Ботокс для волос</h3>
+      <p>Восстановление, блеск и мягкость для сухих и повреждённых волос.</p>
+    </div>
+  </div>
 </section>
 
+<!-- МОИ РАБОТЫ -->
 <section id="works" class="section">
-    <h2>Мои работы</h2>
-    <div class="gallery">
-        <img src="work1.jpg" alt="Работа 1">
-        <img src="work2.jpg" alt="Работа 2">
-    </div>
+  <h2>Мои работы</h2>
+  <div class="gallery">
+    <img src="work1.jpg" alt="Работа 1">
+    <img src="work2.jpg" alt="Работа 2">
+    <img src="work3.jpg" alt="Работа 3">
+  </div>
 </section>
 
+<!-- ОНЛАЙН-ЗАПИСЬ -->
 <section id="booking" class="section">
-    <h2>Запись</h2>
-    <div class="form-box">
-        <form onsubmit="alert('Заявка отправлена!'); return false;">
-            <input type="text" placeholder="Ваше имя" required>
-            <input type="tel" placeholder="Номер телефона" required>
-            <button type="submit">Отправить заявку</button>
-        </form>
-
-        <div class="socials">
-            <p style="margin-bottom:10px;">Или напишите напрямую:</p>
-            <a href="https://t.me/aram_asmik" target="_blank">Telegram</a>
-            <a href="https://www.instagram.com/aram_asmik?igsh=ZWZoemI1d2ZuOHdh" target="_blank">Instagram</a>
-            <a href="https://wa.me/79186686860" target="_blank">WhatsApp</a>
-        </div>
-    </div>
+  <h2>Запись онлайн</h2>
+  <div class="form-box">
+    <input id="name" placeholder="Ваше имя">
+    <input id="phone" placeholder="Телефон">
+    <select id="service">
+      <option>Женская стрижка</option>
+      <option>Окрашивание</option>
+      <option>Укладка</option>
+      <option>Ботокс для волос</option>
+    </select>
+    <input type="date" id="date">
+    <input type="time" id="time">
+    <button onclick="sendBooking()">Записаться</button>
+  </div>
 </section>
 
-<footer>
-    <p>Славянск-на-Кубани • Работа по записи</p>
-    <p>© Асмик Мкртчян</p>
-</footer>
+<div id="popup" class="popup"></div>
 
 </body>
 </html>
